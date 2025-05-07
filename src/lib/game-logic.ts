@@ -3,32 +3,30 @@ import { type Character, type Question, characters, questions } from './characte
 export type Answer = 'yes' | 'no' | 'unknown';
 
 export interface GameState {
-  currentQuestion: Question | null;
-  remainingQuestions: Question[];
-  askedQuestions: { question: Question; answer: Answer }[];
+  currentQuestion: number;
+  askedQuestions: Answer[];
   possibleCharacters: Character[];
-  gameOver: boolean;
   guessedCharacter: Character | null;
   confidence: number;
-  progress: number;
-  difficultyLevel: DifficultyLevel;
-  category: Category | null;
+  gameOver: boolean;
+  difficulty: DifficultyLevel;
+  category: Category;
+  remainingQuestions: Question[];
 }
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 export type Category = 'all' | 'movies' | 'books' | 'games' | 'history' | 'sports' | 'cartoons';
 
 export const initialGameState: GameState = {
-  currentQuestion: null,
-  remainingQuestions: [...questions],
+  currentQuestion: 0,
   askedQuestions: [],
   possibleCharacters: [...characters],
-  gameOver: false,
   guessedCharacter: null,
   confidence: 0,
-  progress: 0,
-  difficultyLevel: 'medium',
-  category: null,
+  gameOver: false,
+  difficulty: 'medium',
+  category: 'all',
+  remainingQuestions: [...questions],
 };
 
 /**
@@ -106,7 +104,7 @@ export const selectNextQuestion = (state: GameState): Question | null => {
   }
 
   // Apply different algorithms based on difficulty level
-  if (state.difficultyLevel === 'easy') {
+  if (state.difficulty === 'easy') {
     // For easy mode, just pick questions randomly to make it harder to guess correctly
     const randomIndex = Math.floor(Math.random() * state.remainingQuestions.length);
     return state.remainingQuestions[randomIndex];
@@ -117,18 +115,15 @@ export const selectNextQuestion = (state: GameState): Question | null => {
   // Medium difficulty uses a combination of information gain and some randomness
 
   // Calculate information gain for each question
-  const questionsWithGain = state.remainingQuestions.map(question => {
-    const gain = calculateInformationGain(
-      state.possibleCharacters,
-      question.attribute
-    );
-    return { question, gain };
-  });
+  const questionsWithGain = state.remainingQuestions.map(question => ({
+    question,
+    gain: calculateInformationGain(state.possibleCharacters, question.attribute)
+  }));
 
   // Sort by information gain (highest first)
   questionsWithGain.sort((a, b) => b.gain - a.gain);
 
-  if (state.difficultyLevel === 'hard') {
+  if (state.difficulty === 'hard') {
     // In hard mode, always choose the question with the highest information gain
     return questionsWithGain[0].question;
   }
@@ -142,36 +137,29 @@ export const selectNextQuestion = (state: GameState): Question | null => {
 /**
  * Updates the game state based on the user's answer
  */
-export const updateGameState = (
-  state: GameState,
-  answer: Answer
-): GameState => {
-  if (!state.currentQuestion || state.gameOver) {
+export const updateGameState = (state: GameState, answer: Answer): GameState => {
+  if (state.gameOver) {
     return state;
   }
 
-  const attribute = state.currentQuestion.attribute;
-  const askedQuestions = [
-    ...state.askedQuestions,
-    { question: state.currentQuestion, answer },
-  ];
+  const currentQuestion = state.remainingQuestions[state.currentQuestion];
+  if (!currentQuestion) {
+    return state;
+  }
 
-  // Filter the possible characters based on the answer
+  const askedQuestions = [...state.askedQuestions, answer];
   let possibleCharacters = [...state.possibleCharacters];
+
   if (answer !== 'unknown') {
     possibleCharacters = possibleCharacters.filter((character) => {
-      const attributeValue = character.attributes[attribute];
+      const attributeValue = character.attributes[currentQuestion.attribute];
       return answer === 'yes' ? attributeValue : !attributeValue;
     });
   }
 
-  // Remove the current question from remaining questions
   const remainingQuestions = state.remainingQuestions.filter(
-    (q) => q.id !== state.currentQuestion?.id
+    (q) => q.id !== currentQuestion.id
   );
-
-  // Calculate progress as percentage of questions asked
-  const progress = (askedQuestions.length / (askedQuestions.length + remainingQuestions.length)) * 100;
 
   // Check if game should end
   let gameOver = false;
@@ -185,8 +173,8 @@ export const updateGameState = (
   // 4. We've run out of questions
 
   // Adjust the conditions based on difficulty level
-  const maxQuestions = state.difficultyLevel === 'easy' ? 15 : state.difficultyLevel === 'medium' ? 12 : 8;
-  const minCharactersToEnd = state.difficultyLevel === 'easy' ? 1 : state.difficultyLevel === 'medium' ? 2 : 3;
+  const maxQuestions = state.difficulty === 'easy' ? 15 : state.difficulty === 'medium' ? 12 : 8;
+  const minCharactersToEnd = state.difficulty === 'easy' ? 1 : state.difficulty === 'medium' ? 2 : 3;
 
   if (
     askedQuestions.length >= maxQuestions ||
@@ -213,14 +201,13 @@ export const updateGameState = (
 
   return {
     ...state,
-    currentQuestion: nextQuestion,
+    currentQuestion: state.currentQuestion + 1,
     remainingQuestions,
     askedQuestions,
     possibleCharacters,
     gameOver,
     guessedCharacter,
     confidence,
-    progress,
   };
 };
 
@@ -228,31 +215,26 @@ export const updateGameState = (
  * Starts a new game with the specified options
  */
 export const startNewGame = (
-  difficultyLevel: DifficultyLevel = 'medium',
-  category: Category | null = null
+  difficulty: DifficultyLevel = 'medium',
+  category: Category = 'all'
 ): GameState => {
-  // Filter characters by category if specified
   let filteredCharacters = [...characters];
 
-  if (category && category !== 'all') {
+  if (category !== 'all') {
     filteredCharacters = filterCharactersByCategory(filteredCharacters, category);
   }
 
-  // Ensure we have at least 5 characters for the game to be interesting
   if (filteredCharacters.length < 5) {
-    filteredCharacters = [...characters]; // Fallback to all characters
+    filteredCharacters = [...characters];
   }
 
-  const gameState: GameState = {
+  return {
     ...initialGameState,
     possibleCharacters: filteredCharacters,
     remainingQuestions: [...questions],
-    difficultyLevel,
+    difficulty,
     category,
   };
-
-  gameState.currentQuestion = selectNextQuestion(gameState);
-  return gameState;
 };
 
 /**
@@ -276,3 +258,10 @@ const filterCharactersByCategory = (characters: Character[], category: Category)
       return characters;
   }
 };
+
+export function getNextQuestion(state: GameState): string {
+  if (state.gameOver || state.currentQuestion >= state.remainingQuestions.length) {
+    return '';
+  }
+  return state.remainingQuestions[state.currentQuestion]?.text || '';
+}

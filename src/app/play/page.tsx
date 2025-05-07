@@ -1,94 +1,93 @@
 'use client';
 
-import { useState } from 'react';
-import type { Category, DifficultyLevel } from '@/lib/game-logic';
-import Game from '@/components/Game';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import QuestionCard from '@/components/QuestionCard';
+import ResultCard from '@/components/ResultCard';
+import GameHeader from '@/components/GameHeader';
+import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { startNewGame, updateGameState, type GameState, type Answer, getNextQuestion } from '@/lib/game-logic';
 
-export default function PlayPage() {
-  const [gameStarted, setGameStarted] = useState(false);
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
-  const [category, setCategory] = useState<Category>('all');
+export default function SinglePlayerPage() {
+  const router = useRouter();
+  const [gameState, setGameState] = useState<GameState | null>(null);
 
-  const handleStartGame = () => {
-    setGameStarted(true);
+  useEffect(() => {
+    // Initialize game state when component mounts
+    setGameState(startNewGame());
+  }, []);
+
+  const handleAnswer = (answer: Answer) => {
+    if (!gameState) return;
+
+    const newGameState = updateGameState(gameState, answer);
+    setGameState(newGameState);
   };
 
-  if (gameStarted) {
-    return <Game difficulty={difficulty} category={category} />;
+  const handleRestart = () => {
+    router.push('/');
+  };
+
+  if (!gameState) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
   }
 
+  const currentQuestion = getNextQuestion(gameState);
+  const progress = (gameState.currentQuestion / (gameState.currentQuestion + gameState.remainingQuestions.length)) * 100;
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <Card className="shadow-lg border-blue-200 dark:border-blue-800">
-          <CardHeader>
-            <CardTitle className="text-2xl text-blue-600 dark:text-blue-400">Game Settings</CardTitle>
-            <CardDescription>Choose your preferences before starting</CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Difficulty Level</label>
-              <Select
-                value={difficulty}
-                onValueChange={(value) => setDifficulty(value as DifficultyLevel)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="easy">Easy (More questions, easier guessing)</SelectItem>
-                  <SelectItem value="medium">Medium (Default)</SelectItem>
-                  <SelectItem value="hard">Hard (Fewer questions, harder to guess)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Character Category</label>
-              <Select
-                value={category}
-                onValueChange={(value) => setCategory(value as Category)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="movies">Movies</SelectItem>
-                  <SelectItem value="books">Books</SelectItem>
-                  <SelectItem value="games">Video Games</SelectItem>
-                  <SelectItem value="history">Historical Figures</SelectItem>
-                  <SelectItem value="sports">Sports</SelectItem>
-                  <SelectItem value="cartoons">Cartoons & Animation</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex justify-between">
-            <Link href="/">
-              <Button variant="outline">Back</Button>
-            </Link>
-            <Button
-              onClick={handleStartGame}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Start Game
-            </Button>
-          </CardFooter>
-        </Card>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="container mx-auto px-4 py-8"
+    >
+      <div className="text-center mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push('/')}
+            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full 
+              hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg 
+              hover:shadow-purple-500/50"
+          >
+            Back to Home
+          </motion.button>
+          <h2 className="text-2xl font-bold gradient-text">Single Player Mode</h2>
+          <div className="w-[100px]"></div> {/* Spacer for balance */}
+        </div>
+        <p className="text-gray-300">Challenge yourself against Akinator's AI. Think of a character and answer the questions!</p>
       </div>
-    </div>
+
+      <GameHeader
+        progress={progress}
+        questionsAsked={gameState.currentQuestion}
+        difficulty={gameState.difficulty}
+        category={gameState.category}
+      />
+
+      <div className="max-w-2xl mx-auto mt-8">
+        {!gameState.gameOver ? (
+          <QuestionCard
+            question={currentQuestion}
+            onAnswer={handleAnswer}
+          />
+        ) : (
+          gameState.guessedCharacter && (
+            <ResultCard
+              character={gameState.guessedCharacter}
+              confidence={gameState.confidence}
+              possibleCharacters={gameState.possibleCharacters.slice(0, 3)}
+              onRestart={handleRestart}
+            />
+          )
+        )}
+      </div>
+    </motion.div>
   );
 }

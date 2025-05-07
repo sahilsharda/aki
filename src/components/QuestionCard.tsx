@@ -1,65 +1,200 @@
 'use client';
 
-import type { Answer } from '@/lib/game-logic';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
 interface QuestionCardProps {
   question: string;
-  onAnswer: (answer: Answer) => void;
+  onAnswer: (answer: 'yes' | 'no' | 'unknown') => void;
 }
+
+const cardVariants = {
+  hidden: {
+    opacity: 0,
+    y: 50,
+    scale: 0.8,
+    rotateX: -20
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    rotateX: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15,
+      staggerChildren: 0.1
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: -50,
+    scale: 0.8,
+    rotateX: 20,
+    transition: {
+      duration: 0.3
+    }
+  }
+};
+
+const buttonVariants = {
+  hover: {
+    scale: 1.1,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 10
+    }
+  },
+  tap: {
+    scale: 0.95
+  }
+};
 
 export default function QuestionCard({ question, onAnswer }: QuestionCardProps) {
   return (
-    <Card className="w-full shadow-lg border-blue-200 dark:border-blue-800">
-      <CardHeader className="text-center pb-2">
-        <CardTitle className="text-2xl text-blue-600 dark:text-blue-400">I'm thinking...</CardTitle>
-        <CardDescription>Answer the questions so I can guess your character</CardDescription>
-      </CardHeader>
-
-      <div className="flex justify-center my-4">
-        <div className="relative w-20 h-20">
-          <Image
-            src="/akinator.png"
-            alt="Akinator"
-            width={80}
-            height={80}
-            className="object-contain"
-            style={{ objectFit: 'contain' }}
-            onError={(e) => {
-              // Fallback to a question mark if image fails to load
-              e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1oZWxwLWNpcmNsZSI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiLz48cGF0aCBkPSJNOS4wOSA5YTMgMyAwIDAgMSA1LjgzIDFjMCAyLTMgMy0zIDMiLz48cGF0aCBkPSJNMTIgMTd2LjAxIi8+PC9zdmc+';
+    <AnimatePresence mode="wait">
+      <motion.div
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="glass-effect neon-border rounded-lg p-8 hover-scale"
+        style={{
+          perspective: "1000px",
+          transformStyle: "preserve-3d"
+        }}
+      >
+        <div className="flex flex-col items-center gap-8">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: -20 }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              y: 0,
+              transition: {
+                type: "spring",
+                stiffness: 200,
+                damping: 20
+              }
             }}
-          />
+            className="relative w-40 h-40"
+            style={{
+              filter: "drop-shadow(0 0 20px rgba(147, 51, 234, 0.5))"
+            }}
+          >
+            <motion.div
+              animate={{
+                y: [0, -15, 0],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut"
+              }}
+              className="relative w-full h-full"
+            >
+              <Image
+                src="/akinator.svg"
+                alt="Akinator"
+                fill
+                className="object-contain"
+                priority
+              />
+            </motion.div>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              transition: {
+                type: "spring",
+                stiffness: 100,
+                delay: 0.2
+              }
+            }}
+            className="text-3xl font-bold text-center gradient-text"
+            style={{
+              textShadow: "0 0 20px rgba(147, 51, 234, 0.5)"
+            }}
+          >
+            {question}
+          </motion.h2>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              transition: {
+                type: "spring",
+                stiffness: 100,
+                delay: 0.4
+              }
+            }}
+            className="flex gap-6"
+          >
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => onAnswer('yes')}
+              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full 
+                hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg 
+                hover:shadow-purple-500/50 relative overflow-hidden group"
+            >
+              <motion.span
+                className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20"
+                initial={{ x: "-100%" }}
+                whileHover={{ x: "100%" }}
+                transition={{ duration: 0.5 }}
+              />
+              <span className="relative z-10">Yes</span>
+            </motion.button>
+
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => onAnswer('no')}
+              className="px-8 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-full 
+                hover:from-pink-700 hover:to-purple-700 transition-all duration-300 shadow-lg 
+                hover:shadow-pink-500/50 relative overflow-hidden group"
+            >
+              <motion.span
+                className="absolute inset-0 bg-gradient-to-r from-pink-400/20 to-purple-400/20"
+                initial={{ x: "-100%" }}
+                whileHover={{ x: "100%" }}
+                transition={{ duration: 0.5 }}
+              />
+              <span className="relative z-10">No</span>
+            </motion.button>
+
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => onAnswer('unknown')}
+              className="px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-full 
+                hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg 
+                hover:shadow-gray-500/50 relative overflow-hidden group"
+            >
+              <motion.span
+                className="absolute inset-0 bg-gradient-to-r from-gray-400/20 to-gray-500/20"
+                initial={{ x: "-100%" }}
+                whileHover={{ x: "100%" }}
+                transition={{ duration: 0.5 }}
+              />
+              <span className="relative z-10">Don't Know</span>
+            </motion.button>
+          </motion.div>
         </div>
-      </div>
-
-      <CardContent className="text-center">
-        <p className="text-xl font-medium mb-8 min-h-[60px]">{question}</p>
-      </CardContent>
-
-      <CardFooter className="flex justify-between gap-2">
-        <Button
-          onClick={() => onAnswer('yes')}
-          className="flex-1 bg-green-600 hover:bg-green-700"
-        >
-          Yes
-        </Button>
-        <Button
-          onClick={() => onAnswer('no')}
-          className="flex-1 bg-red-600 hover:bg-red-700"
-        >
-          No
-        </Button>
-        <Button
-          onClick={() => onAnswer('unknown')}
-          variant="outline"
-          className="flex-1"
-        >
-          I don't know
-        </Button>
-      </CardFooter>
-    </Card>
+      </motion.div>
+    </AnimatePresence>
   );
 }

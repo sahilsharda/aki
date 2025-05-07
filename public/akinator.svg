@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Animated Background Circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#gradient-bg)">
+    <animate attributeName="r" values="90;95;90" dur="3s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Glowing Orb -->
+  <circle cx="100" cy="100" r="70" fill="url(#glow-orb)" opacity="0.3">
+    <animate attributeName="opacity" values="0.3;0.5;0.3" dur="2s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Eyes -->
+  <g>
+    <circle cx="70" cy="80" r="15" fill="white">
+      <animate attributeName="r" values="15;16;15" dur="2s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="130" cy="80" r="15" fill="white">
+      <animate attributeName="r" values="15;16;15" dur="2s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="70" cy="80" r="7" fill="black">
+      <animate attributeName="cy" values="80;82;80" dur="3s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="130" cy="80" r="7" fill="black">
+      <animate attributeName="cy" values="80;82;80" dur="3s" repeatCount="indefinite" />
+    </circle>
+  </g>
+  
+  <!-- Animated Smile -->
+  <path d="M70 120 Q100 150 130 120" stroke="white" stroke-width="8" stroke-linecap="round">
+    <animate attributeName="d" 
+      values="M70 120 Q100 150 130 120;
+              M70 120 Q100 145 130 120;
+              M70 120 Q100 150 130 120"
+      dur="2s" 
+      repeatCount="indefinite" />
+  </path>
+  
+  <!-- Animated Hat -->
+  <path d="M40 60 Q100 20 160 60" stroke="url(#gradient-hat)" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="d" 
+      values="M40 60 Q100 20 160 60;
+              M40 60 Q100 25 160 60;
+              M40 60 Q100 20 160 60"
+      dur="3s" 
+      repeatCount="indefinite" />
+  </path>
+  
+  <!-- Sparkles -->
+  <g>
+    <circle cx="50" cy="50" r="2" fill="white">
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="150" cy="50" r="2" fill="white">
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="100" cy="30" r="2" fill="white">
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" />
+    </circle>
+  </g>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="gradient-bg" x1="0" y1="0" x2="200" y2="200">
+      <stop offset="0%" stop-color="#9333EA">
+        <animate attributeName="stop-color" 
+          values="#9333EA;#EC4899;#9333EA" 
+          dur="3s" 
+          repeatCount="indefinite" />
+      </stop>
+      <stop offset="100%" stop-color="#EC4899">
+        <animate attributeName="stop-color" 
+          values="#EC4899;#9333EA;#EC4899" 
+          dur="3s" 
+          repeatCount="indefinite" />
+      </stop>
+    </linearGradient>
+    
+    <radialGradient id="glow-orb" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#9333EA" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#EC4899" stop-opacity="0" />
+    </radialGradient>
+    
+    <linearGradient id="gradient-hat" x1="0" y1="0" x2="200" y2="0">
+      <stop offset="0%" stop-color="#EC4899">
+        <animate attributeName="stop-color" 
+          values="#EC4899;#9333EA;#EC4899" 
+          dur="3s" 
+          repeatCount="indefinite" />
+      </stop>
+      <stop offset="50%" stop-color="#9333EA">
+        <animate attributeName="stop-color" 
+          values="#9333EA;#EC4899;#9333EA" 
+          dur="3s" 
+          repeatCount="indefinite" />
+      </stop>
+      <stop offset="100%" stop-color="#EC4899">
+        <animate attributeName="stop-color" 
+          values="#EC4899;#9333EA;#EC4899" 
+          dur="3s" 
+          repeatCount="indefinite" />
+      </stop>
+    </linearGradient>
+  </defs>
+</svg> 
